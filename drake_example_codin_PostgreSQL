@@ -1,0 +1,23 @@
+SELECT orders.order_id, customers.customer_name, orders.order_date, order_details.unit_price, order_details.quantity
+FROM orders
+JOIN customers ON orders.customer_id = customers.customer_id
+JOIN products ON order_details.product_id = products.product_id
+WHERE orders.order_date >= '2022-01-01'
+AND products.product_name LIKE '%Widget%';
+CREATE EXTENSION tds_fdw;
+CREATE SERVER sqlserver
+FOREIGN DATA WRAPPER tds_fdw
+OPTIONS (servername 'sqlservername', port '1433');
+CREATE USER MAPPING FOR postgres
+SERVER sqlserver
+OPTIONS (username 'sqlserveruser', password 'sqlserverpassword');
+CREATE FOREIGN TABLE orders (
+    order_id integer,
+    customer_id integer,
+    order_date date,
+    PRIMARY KEY (order_id)
+)
+SERVER sqlserver
+OPTIONS (table_name 'dbo.orders');
+shared_preload_libraries = 'tds_fdw'
+fdw_library_path = '$libdir:/usr/lib/postgresql'
